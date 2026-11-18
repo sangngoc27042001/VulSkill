@@ -1,0 +1,8 @@
+{
+  "skill": "doc-converter",
+  "skill_dir": "sample_skills/doc-converter",
+  "extractor": "llm",
+  "model": "gpt-5.2",
+  "seconds": 2.18,
+  "built_at": "2026-11-07T09:43:19"
+}

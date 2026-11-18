@@ -1,0 +1,30 @@
+flowchart LR
+  n1["SKILL.md"]:::doc
+  n2["scripts/convert.py"]:::code
+  n3(("Agent context")):::ctx
+  n4{{"convert.py argv[1]"}}:::neutral
+  n5{{"convert.py: subprocess.run list-form (no shell)"}}:::sanitizer
+  n6{{"convert.py: print()"}}:::sink
+  n7[/"workspace_file_name: For each Markdown file in the repository [untrust"/]:::untrusted
+  n8{{"report to user"}}:::neutral
+  n9{{"trigger: doc-converter-safe (breadth 0.1)"}}:::sink
+  n1 -.->|"refers: #lt;filename#gt; -#gt; argv[1]"| n2
+  n1 -.- n7
+  n1 -.- n8
+  n1 -.- n9
+  n2 -.- n4
+  n2 -.- n5
+  n2 -.- n6
+  n3 -->|"probabilistic / doc_instruction"| n8
+  n4 ==>|"deterministic / code"| n5
+  n6 ==>|"deterministic / stdout"| n3
+  n7 -->|"extracted / doc_instruction"| n4
+  classDef code fill:#dbeafe,stroke:#2563eb,color:#111
+  classDef doc fill:#fef3c7,stroke:#d97706,color:#111
+  classDef untrusted fill:#dc2626,stroke:#7f1d1d,color:#fff
+  classDef secret fill:#f97316,stroke:#9a3412,color:#fff
+  classDef trusted fill:#16a34a,stroke:#14532d,color:#fff
+  classDef sink fill:#7f1d1d,stroke:#450a0a,color:#fff
+  classDef sanitizer fill:#2563eb,stroke:#1e3a8a,color:#fff
+  classDef neutral fill:#6b7280,stroke:#374151,color:#fff
+  classDef ctx fill:#7c3aed,stroke:#4c1d95,color:#fff

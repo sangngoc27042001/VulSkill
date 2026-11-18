@@ -1,0 +1,15 @@
+skill,candidates,top_sink,sinks,patterns,confluence,holds_untrusted,holds_secret,binding_errors,nodes,edges,extractor,model,seconds,built_at,graph_html,ambient_secret
+deploy-helper,5,shell_exec,context_output;shell_exec;skill_trigger,T1;T5;T6,False,True,False,0,11,16,llm,gpt-5.2,2.476,2026-11-07T09:43:17,deploy-helper/graph.html,False
+doc-converter,1,shell_exec,shell_exec,T1,False,False,False,0,9,11,llm,gpt-5.2,2.180,2026-11-07T09:43:19,doc-converter/graph.html,False
+doc-converter,1,shell_exec,shell_exec,T1,False,False,False,0,9,11,llm,gpt-5.2,2.765,2026-11-07T09:48:19,doc-converter-hard1/graph.html,False
+doc-converter-safe,0,,,,False,False,False,0,9,11,llm,gpt-5.2,2.253,2026-11-07T09:43:23,doc-converter-safe/graph.html,False
+docs-site-sync,2,agent_config_write,agent_config_write;context_output,T4;T6,False,True,False,0,16,23,llm,gpt-5.2,3.023,2026-11-07T09:43:26,docs-site-sync/graph.html,False
+gh-helper,3,network_egress,context_output;network_egress,T6;T7,True,True,True,0,12,16,llm,gpt-5.2,2.531,2026-11-07T09:43:29,gh-helper/graph.html,False
+git-tools,2,shell_exec,context_output;shell_exec,T3;T6,False,True,False,0,9,11,llm,gpt-5.2,2.437,2026-11-07T09:43:31,git-tools/graph.html,False
+log-triage,2,shell_exec,file_write;shell_exec,T1;T6,False,False,False,0,19,26,llm,gpt-5.2,2.877,2026-11-07T09:43:34,log-triage/graph.html,False
+project-bootstrap,1,agent_config_write,agent_config_write,T4,False,True,False,0,10,15,llm,gpt-5.2,2.972,2026-11-07T09:43:37,project-bootstrap/graph.html,False
+release-notes,2,shell_exec,context_output;shell_exec,T3;T6,False,True,False,0,18,24,llm,gpt-5.2,3.160,2026-11-07T09:43:40,release-notes/graph.html,False
+clawnads,1,value_transfer,value_transfer,T2;T8,False,True,False,0,7,8,llm,gpt-5.2,4.297,2026-11-16T16:18:09,send-money/graph.html,True
+setup-env,0,,,,False,False,False,0,9,11,llm,gpt-5.2,2.155,2026-11-07T09:43:43,setup-env/graph.html,False
+sng-custom,8,shell_exec,agent_config_write;context_output;network_egress;shell_exec,T2;T4;T6;T7,True,True,True,0,18,26,llm,gpt-5.2,3.982,2026-11-07T09:43:47,sng-custom/graph.html,False
+web-research,2,shell_exec,context_output;shell_exec,T2;T6,False,True,False,0,10,13,llm,gpt-5.2,3.478,2026-11-07T09:43:50,web-research/graph.html,False

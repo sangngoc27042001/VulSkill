@@ -1,0 +1,8 @@
+{
+  "skill": "clawnads",
+  "skill_dir": "sample_skills/send-money",
+  "extractor": "llm",
+  "model": "gpt-5.2",
+  "seconds": 4.297,
+  "built_at": "2026-11-16T16:18:09"
+}

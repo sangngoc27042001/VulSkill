@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>doc-converter flow graph</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+:root {
+  --bg: #ffffff; --panel: #f6f7f9; --fg: #111827; --muted: #6b7280; --border: #e5e7eb;
+  --accent: #7c3aed; --hl: #fde68a; --det: #111827;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115; --panel: #171a21; --fg: #e5e7eb; --muted: #9ca3af; --border: #2a2f3a;
+    --accent: #a78bfa; --hl: #854d0e; --det: #e5e7eb;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115; --panel: #171a21; --fg: #e5e7eb; --muted: #9ca3af; --border: #2a2f3a;
+  --accent: #a78bfa; --hl: #854d0e; --det: #e5e7eb;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+#app { display: grid; grid-template-columns: 1fr 360px; height: 100vh; }
+#graph { position: relative; min-height: 60vh; }
+#net { position: absolute; inset: 0; }
+#toolbar { position: absolute; top: 8px; left: 8px; z-index: 5; display: flex; gap: 6px; flex-wrap: wrap; }
+#toolbar button, #toolbar label { background: var(--panel); color: var(--fg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 8px; font: inherit; font-size: 12px; cursor: pointer; }
+aside { background: var(--panel); border-left: 1px solid var(--border); overflow-y: auto; padding: 14px 16px; }
+h1 { font-size: 17px; margin: 0 0 4px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 18px 0 6px; }
+.desc { color: var(--muted); margin: 0 0 8px; }
+.badge { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 11px; margin: 0 4px 4px 0;
+  border: 1px solid var(--border); }
+.badge.bad { background: #dc2626; color: #fff; border-color: #dc2626; }
+.badge.warn { background: #f97316; color: #fff; border-color: #f97316; }
+.badge.ok { background: #16a34a; color: #fff; border-color: #16a34a; }
+.path { border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin-bottom: 6px; cursor: pointer;
+  background: var(--bg); }
+.path:hover { border-color: var(--accent); }
+.path.active { outline: 2px solid var(--accent); }
+.path .head { font-weight: 600; }
+.path .chain { color: var(--muted); font-size: 12px; margin-top: 3px; word-break: break-word; }
+.legend { display: grid; grid-template-columns: 22px 1fr; gap: 4px 8px; align-items: center; font-size: 12px; }
+#details { font-size: 12px; white-space: pre-wrap; word-break: break-word; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px; min-height: 40px; }
+.empty { color: var(--muted); font-style: italic; }
+.ptag { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 0 6px; margin-right: 4px;
+  background: var(--accent); color: #fff; }
+.path .psum { font-size: 12px; margin-top: 3px; }
+.pbox { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0;
+  padding: 8px; margin-bottom: 8px; font-size: 12px; white-space: normal; }
+.pbox .pname { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.pbox .prule { font-family: ui-monospace, monospace; color: var(--muted); margin-top: 6px; }
+#details pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+#patterns details { border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; margin-bottom: 6px; font-size: 12px; }
+#patterns details.present { border-color: var(--accent); }
+#patterns summary { cursor: pointer; }
+#patterns details p { margin: 6px 0 0; }
+#patterns .count { color: var(--muted); }
+.vis-tooltip { max-width: 420px; white-space: pre-wrap !important; font: 12px/1.4 ui-monospace, monospace !important;
+  background: var(--panel) !important; color: var(--fg) !important; border: 1px solid var(--border) !important; }
+@media (max-width: 860px) {
+  #app { grid-template-columns: 1fr; grid-template-rows: 65vh auto; height: auto; }
+  aside { border-left: 0; border-top: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="graph">
+    <div id="toolbar">
+      <button id="fit" type="button">Fit</button>
+      <button id="clear" type="button">Clear highlight</button>
+      <label><input type="checkbox" id="showProv" checked> refers/defines</label>
+      <label><input type="checkbox" id="physics"> physics</label>
+    </div>
+    <div id="net"></div>
+  </div>
+  <aside>
+    <h1 id="skill"></h1>
+    <p class="desc" id="desc"></p>
+    <div id="badges"></div>
+    <h2>Candidate paths</h2>
+    <div id="paths"></div>
+    <h2>Confluence</h2>
+    <div id="conf"></div>
+    <h2>Pattern types</h2>
+    <div id="patterns"></div>
+    <h2>Selected</h2>
+    <div id="details" class="empty">Click a node, edge or path.</div>
+    <h2>Legend</h2>
+    <div class="legend" id="legend"></div>
+    <h2>Notes</h2>
+    <div id="notes"></div>
+  </aside>
+</div>
+<script id="graph-data" type="application/json">{"graph": {"directed": true, "multigraph": true, "graph": {"skill": "doc-converter", "skill_dir": "/Users/ngocsang/Documents/Research/VulSkill/sample_skills/doc-converter", "description": "Convert Markdown documentation to PDF with pandoc. Use when the user asks to export or convert the docs.", "extractor": "llm", "trigger_breadth": 0.1, "warnings": [], "records": [{"id": "i1", "action": "invoke_script", "target": "scripts/convert.py", "args": [{"slot": "filename", "position": 1, "flag": null, "filled_from": "For each Markdown file in the repository", "input_id": "in1"}], "input_from": null, "evidence": {"file": "SKILL.md", "lines": [12, 12], "quote": "1. For each Markdown file in the repository, run `python scripts/convert.py <filename>`."}, "confidence": 0.86, "extractor": "llm"}, {"id": "i2", "action": "report_to_user", "target": "Tell the user which PDFs were produced.", "args": [], "input_from": null, "evidence": {"file": "SKILL.md", "lines": [13, 13], "quote": "2. Tell the user which PDFs were produced."}, "confidence": 0.9, "extractor": "llm"}], "rejected_records": [], "binding_errors": []}, "nodes": [{"type": "Artifact", "label": "SKILL.md", "key": "artifact:SKILL.md", "kind": "doc", "path": "SKILL.md", "modality": "doc", "id": "n1"}, {"type": "Artifact", "label": "scripts/convert.py", "key": "artifact:scripts/convert.py", "kind": "code", "path": "scripts/convert.py", "lang": "python", "modality": "code", "id": "n2"}, {"type": "AgentContext", "label": "Agent context", "key": "ctx", "future_sessions": false, "holds_untrusted": false, "holds_secret": false, "label_sources": [], "id": "n3"}, {"type": "Operator", "label": "convert.py argv[1]", "key": "code:scripts/convert.py:in1", "role": "neutral", "port": "argv[1]", "position": 1, "script": "scripts/convert.py", "modality": "code", "evidence": {"file": "scripts/convert.py", "lines": [7], "quote": "src = sys.argv[1]"}, "in": "code", "operator_kind": "script_input", "id": "n4"}, {"type": "Operator", "label": "convert.py: os.system", "key": "code:scripts/convert.py:op2", "role": "sink", "sink_category": "shell_exec", "modality": "code", "evidence": {"file": "scripts/convert.py", "lines": [9], "quote": "os.system(f\"pandoc {src} -o out.pdf\")"}, "in": "code", "id": "n5"}, {"type": "Operator", "label": "convert.py: print()", "key": "code:scripts/convert.py:op3", "role": "sink", "sink_category": "context_output", "modality": "code", "evidence": {"file": "scripts/convert.py", "lines": [10], "quote": "print(\"conversion finished\")"}, "in": "code", "id": "n6"}, {"type": "Source", "label": "workspace_file_name: For each Markdown file in the repository [untrusted]", "key": "docsrc:SKILL.md:12:workspace_file_name:filename", "trust": "untrusted", "found_in": "doc", "category": "workspace_file_name", "decided_by": "rule", "rule": "file-names", "filled_from": "For each Markdown file in the repository", "modality": "doc", "evidence": {"file": "SKILL.md", "lines": [12, 12], "quote": "1. For each Markdown file in the repository, run `python scripts/convert.py <filename>`."}, "id": "n7"}, {"type": "Operator", "label": "report to user", "key": "docop:i2", "role": "neutral", "modality": "doc", "action": "report_to_user", "record_id": "i2", "confidence": 0.9, "extractor": "llm", "evidence": {"file": "SKILL.md", "lines": [13, 13], "quote": "2. Tell the user which PDFs were produced."}, "in": "doc", "id": "n8"}, {"type": "Operator", "label": "trigger: doc-converter (breadth 0.1)", "key": "trigger", "role": "sink", "sink_category": "skill_trigger", "breadth": 0.1, "modality": "doc", "evidence": {"file": "SKILL.md", "lines": [3, 3], "quote": "Convert Markdown documentation to PDF with pandoc. Use when the user asks to export or convert the docs."}, "in": "doc", "id": "n9"}], "edges": [{"etype": "refers", "binds": "<filename> -> argv[1]", "source": "n1", "target": "n2", "key": 0, "id": "e1"}, {"etype": "defines", "source": "n1", "target": "n7", "key": 0, "id": "e2"}, {"etype": "defines", "source": "n1", "target": "n8", "key": 0, "id": "e3"}, {"etype": "defines", "source": "n1", "target": "n9", "key": 0, "id": "e4"}, {"etype": "defines", "source": "n2", "target": "n4", "key": 0, "id": "e5"}, {"etype": "defines", "source": "n2", "target": "n5", "key": 0, "id": "e6"}, {"etype": "defines", "source": "n2", "target": "n6", "key": 0, "id": "e7"}, {"etype": "flow", "certainty": "probabilistic", "via": "doc_instruction", "source": "n3", "target": "n8", "key": 0, "id": "e8"}, {"etype": "flow", "certainty": "deterministic", "via": "code", "source": "n4", "target": "n5", "key": 0, "id": "e9"}, {"etype": "flow", "certainty": "deterministic", "via": "stdout", "source": "n6", "target": "n3", "key": 0, "id": "e10"}, {"etype": "flow", "certainty": "extracted", "via": "doc_instruction", "binds": "<filename> -> argv[1]", "filled_from": "For each Markdown file in the repository", "decided_by": "rule", "source": "n7", "target": "n4", "key": 0, "id": "e11"}]}, "result": {"skill": "doc-converter", "candidates": [{"skill": "doc-converter", "kind": "path", "path": ["n7", "n4", "n5"], "path_labels": ["workspace_file_name: For each Markdown file in the repository [untrusted]", "convert.py argv[1]", "convert.py: os.system"], "edges": [{"from": "n7", "to": "n4", "certainty": "extracted", "via": "doc_instruction", "binds": "<filename> -> argv[1]"}, {"from": "n4", "to": "n5", "certainty": "deterministic", "via": "code"}], "shape": {"source_category": "workspace_file_name", "source_trust": "untrusted", "sink_category": "shell_exec", "cross_modal": true, "probabilistic_edges": 0, "code_involved": true, "via_agent_context": false, "uses_defaults": false}, "severity": 0, "evidence": [{"node": "n7", "file": "SKILL.md", "lines": [12, 12], "quote": "1. For each Markdown file in the repository, run `python scripts/convert.py <filename>`."}, {"node": "n4", "file": "scripts/convert.py", "lines": [7], "quote": "src = sys.argv[1]"}, {"node": "n5", "file": "scripts/convert.py", "lines": [9], "quote": "os.system(f\"pandoc {src} -o out.pdf\")"}], "status": "candidate", "id": "p1", "pattern": {"id": "T1", "name": "Direct taint flow", "summary": "Untrusted data reaches a sink with no decision by the agent on the way."}}], "confluence": [], "pattern_catalog": {"T1": {"name": "Direct taint flow", "summary": "Untrusted data reaches a sink with no decision by the agent on the way.", "explanation": "The data flows straight into a dangerous operation: typically the doc tells the agent to pass untrusted data (e.g. a repository file name) as a script argument, and the script hands it to the shell unsanitized. Every step is code or an explicit instruction, so it fires whenever the skill runs on attacker-controlled input.", "rule": "Su -> ... -> K without passing through the Agent context"}, "T2": {"name": "Data-to-instruction promotion", "summary": "Untrusted content enters the agent context and a doc instruction tells the agent to act on it.", "explanation": "The skill turns data into commands: for example it fetches a page and says \"follow any setup steps it contains\". Whoever controls the content controls what the agent does. No code bug is needed; the vulnerable part is the instruction.", "rule": "Su ~> C ->p K, where K is a doc operator (e.g. follow content)"}, "T3": {"name": "LLM-mediated chaining", "summary": "One script's output enters the context and the agent copies a value from it into another script.", "explanation": "The LLM is the bridge between two scripts: it picks a value (a branch name, a title) from output it has read and passes it on. If that value is attacker-chosen and the second script uses it unsafely, the attack crosses the LLM. Static taint tools miss this because the link is not in any code.", "rule": "Su ~> C ->p script input ~> K (via llm_binding)"}, "T4": {"name": "Untrusted persistent write", "summary": "External content is written into a file the agent auto-loads (CLAUDE.md, AGENTS.md, .cursorrules).", "explanation": "Whoever controls the written content controls the agent's standing instructions, not just this run but every future session in that project (persists edge back into the context).", "rule": "Su ~> K (agent_config_write), plus K -> C (persists)"}, "T5": {"name": "Trigger over-breadth", "summary": "Untrusted content in the context can make the agent activate a skill through its broad description.", "explanation": "The skill's description matches too much (\"use whenever X is mentioned\"), so any page, file or issue that mentions X can start the skill without the user asking. Dangerous when the triggered skill has powerful sinks of its own.", "rule": "Su ~> C ->p K (skill_trigger), description breadth >= threshold"}, "T6": {"name": "Exposure", "summary": "Untrusted or secret data is placed into the agent context (or a secret into a file).", "explanation": "A script prints data into the context (or writes a secret to a file). Nothing acts on it yet: with untrusted data it is the first half of T2/T3; with a secret it is a leak by itself (the token is now in the conversation, logs, or a shareable report). Lowest severity.", "rule": "(Su | Ss) ~> K (context_output) -> C, or Ss ~> K (file_write)"}, "T7": {"name": "Secret-untrusted confluence", "summary": "A secret and attacker-controlled content end up in the same context, which has a way out.", "explanation": "Neither flow is a vulnerability alone. Together, the attacker's text can ask the agent to send the secret it can already see. Defined by two flows meeting at the context, plus an outflow (often the documented default network outflow).", "rule": "Ss ~> C  and  Su ~> C  and  C ->p K (network/shell)"}}, "binding_errors": [], "rejected_records": [], "warnings": []}}</script>
+<script>
+(function () {
+  const payload = JSON.parse(document.getElementById("graph-data").textContent);
+  const G = payload.graph, R = payload.result;
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const byId = Object.fromEntries(G.nodes.map((n) => [n.id, n]));
+
+  const COLORS = {
+    code: { background: "#dbeafe", border: "#2563eb" }, doc: { background: "#fef3c7", border: "#d97706" },
+    untrusted: "#dc2626", secret: "#f97316", trusted: "#16a34a",
+    sink: "#7f1d1d", sanitizer: "#2563eb", neutral: "#6b7280", ctx: "#7c3aed",
+    extracted: "#2563eb", probabilistic: "#ea580c", refers: "#9ca3af", defines: "#cbd5e1",
+  };
+
+  function tooltip(obj, skip) {
+    const el = document.createElement("div");
+    const lines = [];
+    for (const [k, v] of Object.entries(obj)) {
+      if (skip.includes(k) || v === null || v === undefined) continue;
+      if (k === "evidence" && v) {
+        lines.push(`evidence: ${v.file}:${(v.lines || []).join("-")}\n  "${v.quote}"`);
+      } else {
+        lines.push(`${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`);
+      }
+    }
+    el.textContent = lines.join("\n");
+    return el;
+  }
+
+  function nodeStyle(n) {
+    const fg = css("--fg");
+    const s = { id: n.id, label: n.label, font: { color: fg, size: 13, face: "system-ui" }, borderWidth: 2 };
+    if (n.type === "Artifact") {
+      Object.assign(s, { shape: "box", color: COLORS[n.kind] || COLORS.doc, font: { color: "#111827", size: 13 },
+        shapeProperties: { borderRadius: 2 }, margin: 8 });
+    } else if (n.type === "Source") {
+      const c = COLORS[n.trust] || COLORS.trusted;
+      Object.assign(s, { shape: "diamond", size: 16, color: { background: c, border: c } });
+    } else if (n.type === "Operator") {
+      const c = COLORS[n.role] || COLORS.neutral;
+      Object.assign(s, { shape: n.operator_kind === "script_input" ? "triangle" : "hexagon", size: 15,
+        color: { background: c, border: c } });
+    } else {
+      Object.assign(s, { shape: "ellipse", color: { background: COLORS.ctx, border: "#4c1d95" },
+        font: { color: "#ffffff", size: 20, bold: true }, margin: 18, borderWidth: 3 });
+      s.label = n.label + (n.holds_untrusted ? "\n[untrusted]" : "") + (n.holds_secret ? " [secret]" : "")
+        + (n.future_sessions ? "\n(+ future sessions)" : "");
+    }
+    if (n.default) s.shapeProperties = Object.assign({}, s.shapeProperties, { borderDashes: [5, 4] });
+    s.title = tooltip(n, ["key", "label", "id"]);
+    s._base = { color: s.color, font: s.font };
+    return s;
+  }
+
+  function edgeStyle(e) {
+    const s = { id: e.id, from: e.source, to: e.target, arrows: "to", etype: e.etype, smooth: { type: "dynamic" } };
+    if (e.etype === "refers") {
+      Object.assign(s, { dashes: true, color: { color: COLORS.refers }, width: 1, label: e.binds || "",
+        font: { size: 10, color: css("--muted"), strokeWidth: 0 } });
+    } else if (e.etype === "defines") {
+      Object.assign(s, { dashes: [2, 4], color: { color: COLORS.defines }, width: 1, arrows: "" });
+    } else {
+      const c = e.certainty === "deterministic" ? css("--det") : COLORS[e.certainty];
+      Object.assign(s, { color: { color: c }, width: 2.2, dashes: e.certainty === "probabilistic" ? [8, 5] : false,
+        label: [e.via, e.binds].filter(Boolean).join(" · "),
+        font: { size: 10, color: css("--muted"), strokeWidth: 0, align: "middle" } });
+    }
+    s.title = tooltip(e, ["source", "target", "id", "key"]);
+    s._base = { color: s.color, width: s.width };
+    return s;
+  }
+
+  const nodes = new vis.DataSet(G.nodes.map(nodeStyle));
+  const edges = new vis.DataSet(G.edges.map(edgeStyle));
+  const container = document.getElementById("net");
+  const network = new vis.Network(container, { nodes, edges }, {
+    physics: { solver: "forceAtlas2Based", forceAtlas2Based: { gravitationalConstant: -80, springLength: 120 },
+      stabilization: { iterations: 400 } },
+    interaction: { hover: true, tooltipDelay: 120, navigationButtons: false },
+    edges: { arrows: { to: { scaleFactor: 0.6 } } },
+  });
+  network.once("stabilizationIterationsDone", () => { network.setOptions({ physics: false }); network.fit(); });
+
+  // ---------------------------------------------------------------- side panel
+  document.getElementById("skill").textContent = G.graph.skill;
+  document.getElementById("desc").textContent = G.graph.description;
+  const ctx = G.nodes.find((n) => n.type === "AgentContext") || {};
+  const badges = document.getElementById("badges");
+  function badge(text, cls) { const b = document.createElement("span"); b.className = "badge " + (cls || ""); b.textContent = text; badges.appendChild(b); }
+  badge(`${G.nodes.length} nodes / ${G.edges.length} edges`);
+  badge(`${R.candidates.length} candidate path(s)`, R.candidates.length ? "bad" : "ok");
+  if (ctx.holds_untrusted) badge("context: untrusted", "bad");
+  if (ctx.holds_secret) badge("context: secret", "warn");
+  if (R.confluence.length) badge("confluence", "bad");
+  badge(`trigger breadth ${G.graph.trigger_breadth}`);
+  badge(`extractor: ${G.graph.extractor}`);
+
+  const pathsEl = document.getElementById("paths");
+  let active = null;
+  function card(rec, head, chain, parent) {
+    const d = document.createElement("div");
+    d.className = "path";
+    const h = document.createElement("div"); h.className = "head";
+    if (rec.pattern) {
+      const tag = document.createElement("span"); tag.className = "ptag"; tag.textContent = rec.pattern.id;
+      tag.title = rec.pattern.name;
+      h.append(tag);
+    }
+    h.append(document.createTextNode(head));
+    d.append(h);
+    if (rec.pattern) {
+      const ps = document.createElement("div"); ps.className = "psum";
+      ps.textContent = `${rec.pattern.name}: ${rec.pattern.summary}`;
+      d.append(ps);
+    }
+    const c = document.createElement("div"); c.className = "chain"; c.textContent = chain;
+    d.append(c);
+    d.addEventListener("click", () => {
+      if (active) active.classList.remove("active");
+      d.classList.add("active"); active = d;
+      highlight(rec.path, rec.kind === "confluence");
+      showDetails(rec);
+    });
+    parent.appendChild(d);
+  }
+  if (!R.candidates.length) pathsEl.innerHTML = '<div class="empty">No candidate paths.</div>';
+  for (const p of R.candidates) {
+    const s = p.shape;
+    card(p, `${p.id}: ${s.source_trust === "secret" ? "[secret] " : ""}${s.source_category} → ${s.sink_category}`,
+      `${s.probabilistic_edges} probabilistic edge(s)` + (s.cross_modal ? " · cross-modal" : "") +
+      (s.code_involved ? " · code" : " · doc-only") + (s.uses_defaults ? " · uses default" : "") +
+      "\n" + p.path_labels.join("  →  "), pathsEl);
+  }
+  const confEl = document.getElementById("conf");
+  if (!R.confluence.length) confEl.innerHTML = '<div class="empty">No secret + untrusted confluence.</div>';
+  for (const c of R.confluence) {
+    card(c, `${c.id}: secret + untrusted in context`,
+      `outflows: ${c.outflows.map((o) => o.label).join(", ")}`, confEl);
+  }
+
+  function patternBox(pid) {
+    const P = R.pattern_catalog[pid];
+    const box = document.createElement("div"); box.className = "pbox";
+    const n = document.createElement("div"); n.className = "pname"; n.textContent = `${pid} · ${P.name}`;
+    const e = document.createElement("div"); e.textContent = P.explanation;
+    const r = document.createElement("div"); r.className = "prule"; r.textContent = `Graph rule: ${P.rule}`;
+    box.append(n, e, r);
+    return box;
+  }
+  function showDetails(obj) {
+    const el = document.getElementById("details");
+    el.classList.remove("empty");
+    el.replaceChildren();
+    if (obj && obj.pattern) el.append(patternBox(obj.pattern.id));
+    const pre = document.createElement("pre");
+    pre.textContent = JSON.stringify(obj, null, 2);
+    el.append(pre);
+  }
+
+  // ---------------------------------------------------------------- pattern catalog
+  const counts = {};
+  for (const r of [...R.candidates, ...R.confluence]) counts[r.pattern.id] = (counts[r.pattern.id] || 0) + 1;
+  const patEl = document.getElementById("patterns");
+  for (const [pid, P] of Object.entries(R.pattern_catalog)) {
+    const det = document.createElement("details");
+    if (counts[pid]) { det.className = "present"; }
+    const sum = document.createElement("summary");
+    const tag = document.createElement("span"); tag.className = "ptag"; tag.textContent = pid;
+    const cnt = document.createElement("span"); cnt.className = "count";
+    cnt.textContent = counts[pid] ? `  (${counts[pid]} in this skill)` : "";
+    sum.append(tag, document.createTextNode(P.name), cnt);
+    const p1 = document.createElement("p"); p1.textContent = P.explanation;
+    const p2 = document.createElement("p"); p2.className = "prule"; p2.style.fontFamily = "ui-monospace, monospace";
+    p2.textContent = `Graph rule: ${P.rule}`;
+    det.append(sum, p1, p2);
+    patEl.append(det);
+  }
+  network.on("click", (params) => {
+    if (params.nodes.length) showDetails(byId[params.nodes[0]]);
+    else if (params.edges.length) showDetails(G.edges.find((e) => e.id === params.edges[0]));
+  });
+
+  function highlight(path, star) {
+    const onPath = new Set(path);
+    const pathEdges = new Set();
+    for (let i = 0; i < path.length - 1; i++) {
+      const e = G.edges.find((x) => x.source === path[i] && x.target === path[i + 1] && x.etype === "flow");
+      if (e) pathEdges.add(e.id);
+    }
+    if (star) {  // confluence: sources -> ctx -> outflows
+      const ctxId = path.find((id) => byId[id].type === "AgentContext");
+      for (const e of G.edges) if (e.etype === "flow" && (e.target === ctxId || e.source === ctxId) && onPath.has(e.source) && onPath.has(e.target)) pathEdges.add(e.id);
+    }
+    nodes.update(nodes.get().map((n) => ({ id: n.id, opacity: onPath.has(n.id) ? 1 : 0.15 })));
+    edges.update(edges.get().map((e) => pathEdges.has(e.id)
+      ? { id: e.id, width: 5, color: Object.assign({}, e._base.color, { opacity: 1 }), font: { color: css("--fg") } }
+      : { id: e.id, width: e._base.width, color: Object.assign({}, e._base.color, { opacity: 0.1 }),
+          font: { color: "rgba(128,128,128,0.12)" } }));
+    network.fit({ nodes: path, animation: true });
+  }
+  function clear() {
+    if (active) active.classList.remove("active");
+    active = null;
+    nodes.update(nodes.get().map((n) => ({ id: n.id, opacity: 1 })));
+    edges.update(edges.get().map((e) => ({ id: e.id, width: e._base.width, color: Object.assign({}, e._base.color, { opacity: 1 }),
+      font: { color: css("--muted") } })));
+  }
+  document.getElementById("clear").onclick = clear;
+  document.getElementById("fit").onclick = () => network.fit({ animation: true });
+  document.getElementById("physics").onchange = (ev) => network.setOptions({ physics: ev.target.checked });
+  document.getElementById("showProv").onchange = (ev) => {
+    edges.update(edges.get().filter((e) => e.etype !== "flow").map((e) => ({ id: e.id, hidden: !ev.target.checked })));
+  };
+
+  // ---------------------------------------------------------------- legend
+  const L = [
+    ["box:" + COLORS.code.background + ":" + COLORS.code.border, "Artifact (code)"],
+    ["box:" + COLORS.doc.background + ":" + COLORS.doc.border, "Artifact (doc)"],
+    ["dia:" + COLORS.untrusted, "Source untrusted"], ["dia:" + COLORS.secret, "Source secret"],
+    ["dia:" + COLORS.trusted, "Source trusted"],
+    ["hex:" + COLORS.sink, "Operator sink"], ["hex:" + COLORS.sanitizer, "Operator sanitizer"],
+    ["hex:" + COLORS.neutral, "Operator neutral"], ["tri:" + COLORS.neutral, "Script input port"],
+    ["ell:" + COLORS.ctx, "AgentContext"],
+    ["line:det", "flow deterministic"], ["line:" + COLORS.extracted, "flow extracted"],
+    ["dash:" + COLORS.probabilistic, "flow probabilistic"], ["dash:" + COLORS.refers, "refers"],
+    ["dot:" + COLORS.defines, "defines"], ["dashbox", "default (assumed) node"],
+  ];
+  const legend = document.getElementById("legend");
+  function swatch(spec) {
+    const [kind, a, b] = spec.split(":");
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg"); svg.setAttribute("width", "20"); svg.setAttribute("height", "14");
+    let el;
+    const col = a === "det" ? css("--det") : a;
+    if (kind === "box" || kind === "dashbox") { el = document.createElementNS(ns, "rect"); el.setAttribute("x", 2); el.setAttribute("y", 2); el.setAttribute("width", 16); el.setAttribute("height", 10);
+      el.setAttribute("fill", kind === "box" ? a : "none"); el.setAttribute("stroke", kind === "box" ? b : css("--fg")); if (kind === "dashbox") el.setAttribute("stroke-dasharray", "3 2"); }
+    else if (kind === "dia") { el = document.createElementNS(ns, "polygon"); el.setAttribute("points", "10,1 18,7 10,13 2,7"); el.setAttribute("fill", a); }
+    else if (kind === "hex") { el = document.createElementNS(ns, "polygon"); el.setAttribute("points", "5,1 15,1 19,7 15,13 5,13 1,7"); el.setAttribute("fill", a); }
+    else if (kind === "tri") { el = document.createElementNS(ns, "polygon"); el.setAttribute("points", "10,1 19,13 1,13"); el.setAttribute("fill", a); }
+    else if (kind === "ell") { el = document.createElementNS(ns, "ellipse"); el.setAttribute("cx", 10); el.setAttribute("cy", 7); el.setAttribute("rx", 9); el.setAttribute("ry", 6); el.setAttribute("fill", a); }
+    else { el = document.createElementNS(ns, "line"); el.setAttribute("x1", 1); el.setAttribute("y1", 7); el.setAttribute("x2", 19); el.setAttribute("y2", 7);
+      el.setAttribute("stroke", col); el.setAttribute("stroke-width", 2); if (kind === "dash") el.setAttribute("stroke-dasharray", "4 3"); if (kind === "dot") el.setAttribute("stroke-dasharray", "1 3"); }
+    svg.appendChild(el);
+    return svg;
+  }
+  for (const [spec, text] of L) { const t = document.createElement("span"); t.textContent = text; legend.append(swatch(spec), t); }
+
+  // ---------------------------------------------------------------- notes
+  const notes = document.getElementById("notes");
+  const items = [];
+  for (const b of R.binding_errors || []) items.push(`binding error: ${b.script} <${b.slot}> (${b.reason})`);
+  for (const r of R.rejected_records || []) items.push(`rejected record ${r.record.id}: ${r.reasons.join("; ")}`);
+  for (const w of R.warnings || []) items.push(`warning: ${w}`);
+  if (!items.length) notes.innerHTML = '<div class="empty">No binding errors, rejected records or warnings.</div>';
+  for (const t of items) { const d = document.createElement("div"); d.textContent = "• " + t; notes.appendChild(d); }
+
+  // ---------------------------------------------------------------- theme changes
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    nodes.update(G.nodes.map((n) => { const s = nodeStyle(n); return { id: s.id, font: s.font }; }));
+    edges.update(G.edges.map((e) => { const s = edgeStyle(e); return { id: s.id, color: s.color, font: s.font }; }));
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+{
+  "skill": "doc-converter",
+  "candidates": [
+    {
+      "skill": "doc-converter",
+      "kind": "path",
+      "path": [
+        "n7",
+        "n4",
+        "n5"
+      ],
+      "path_labels": [
+        "workspace_file_name: For each Markdown file in the repository [untrusted]",
+        "convert.py argv[1]",
+        "convert.py: os.system"
+      ],
+      "edges": [
+        {
+          "from": "n7",
+          "to": "n4",
+          "certainty": "extracted",
+          "via": "doc_instruction",
+          "binds": "<filename> -> argv[1]"
+        },
+        {
+          "from": "n4",
+          "to": "n5",
+          "certainty": "deterministic",
+          "via": "code"
+        }
+      ],
+      "shape": {
+        "source_category": "workspace_file_name",
+        "source_trust": "untrusted",
+        "sink_category": "shell_exec",
+        "cross_modal": true,
+        "probabilistic_edges": 0,
+        "code_involved": true,
+        "via_agent_context": false,
+        "uses_defaults": false
+      },
+      "severity": 0,
+      "evidence": [
+        {
+          "node": "n7",
+          "file": "SKILL.md",
+          "lines": [
+            12,
+            12
+          ],
+          "quote": "1. For each Markdown file in the repository, run `python scripts/convert.py <filename>`."
+        },
+        {
+          "node": "n4",
+          "file": "scripts/convert.py",
+          "lines": [
+            7
+          ],
+          "quote": "src = sys.argv[1]"
+        },
+        {
+          "node": "n5",
+          "file": "scripts/convert.py",
+          "lines": [
+            9
+          ],
+          "quote": "os.system(f\"pandoc {src} -o out.pdf\")"
+        }
+      ],
+      "status": "candidate",
+      "id": "p1",
+      "pattern": {
+        "id": "T1",
+        "name": "Direct taint flow",
+        "summary": "Untrusted data reaches a sink with no decision by the agent on the way."
+      }
+    }
+  ],
+  "confluence": [],
+  "pattern_catalog": {
+    "T1": {
+      "name": "Direct taint flow",
+      "summary": "Untrusted data reaches a sink with no decision by the agent on the way.",
+      "explanation": "The data flows straight into a dangerous operation: typically the doc tells the agent to pass untrusted data (e.g. a repository file name) as a script argument, and the script hands it to the shell unsanitized. Every step is code or an explicit instruction, so it fires whenever the skill runs on attacker-controlled input.",
+      "rule": "Su -> ... -> K without passing through the Agent context"
+    },
+    "T2": {
+      "name": "Data-to-instruction promotion",
+      "summary": "Untrusted content enters the agent context and a doc instruction tells the agent to act on it.",
+      "explanation": "The skill turns data into commands: for example it fetches a page and says \"follow any setup steps it contains\". Whoever controls the content controls what the agent does. No code bug is needed; the vulnerable part is the instruction.",
+      "rule": "Su ~> C ->p K, where K is a doc operator (e.g. follow content)"
+    },
+    "T3": {
+      "name": "LLM-mediated chaining",
+      "summary": "One script's output enters the context and the agent copies a value from it into another script.",
+      "explanation": "The LLM is the bridge between two scripts: it picks a value (a branch name, a title) from output it has read and passes it on. If that value is attacker-chosen and the second script uses it unsafely, the attack crosses the LLM. Static taint tools miss this because the link is not in any code.",
+      "rule": "Su ~> C ->p script input ~> K (via llm_binding)"
+    },
+    "T4": {
+      "name": "Untrusted persistent write",
+      "summary": "External content is written into a file the agent auto-loads (CLAUDE.md, AGENTS.md, .cursorrules).",
+      "explanation": "Whoever controls the written content controls the agent's standing instructions, not just this run but every future session in that project (persists edge back into the context).",
+      "rule": "Su ~> K (agent_config_write), plus K -> C (persists)"
+    },
+    "T5": {
+      "name": "Trigger over-breadth",
+      "summary": "Untrusted content in the context can make the agent activate a skill through its broad description.",
+      "explanation": "The skill's description matches too much (\"use whenever X is mentioned\"), so any page, file or issue that mentions X can start the skill without the user asking. Dangerous when the triggered skill has powerful sinks of its own.",
+      "rule": "Su ~> C ->p K (skill_trigger), description breadth >= threshold"
+    },
+    "T6": {
+      "name": "Exposure",
+      "summary": "Untrusted or secret data is placed into the agent context (or a secret into a file).",
+      "explanation": "A script prints data into the context (or writes a secret to a file). Nothing acts on it yet: with untrusted data it is the first half of T2/T3; with a secret it is a leak by itself (the token is now in the conversation, logs, or a shareable report). Lowest severity.",
+      "rule": "(Su | Ss) ~> K (context_output) -> C, or Ss ~> K (file_write)"
+    },
+    "T7": {
+      "name": "Secret-untrusted confluence",
+      "summary": "A secret and attacker-controlled content end up in the same context, which has a way out.",
+      "explanation": "Neither flow is a vulnerability alone. Together, the attacker's text can ask the agent to send the secret it can already see. Defined by two flows meeting at the context, plus an outflow (often the documented default network outflow).",
+      "rule": "Ss ~> C  and  Su ~> C  and  C ->p K (network/shell)"
+    }
+  },
+  "binding_errors": [],
+  "rejected_records": [],
+  "warnings": []
+}

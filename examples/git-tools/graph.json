@@ -1,0 +1,282 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {
+    "skill": "git-tools",
+    "skill_dir": "/Users/ngocsang/Documents/Research/VulSkill/sample_skills/git-tools",
+    "description": "Switch git branches. Use when the user asks to check out a branch.",
+    "extractor": "llm",
+    "trigger_breadth": 0.1,
+    "warnings": [],
+    "records": [
+      {
+        "id": "i1",
+        "action": "invoke_script",
+        "target": "scripts/list_branches.py",
+        "args": [],
+        "input_from": null,
+        "evidence": {
+          "file": "SKILL.md",
+          "lines": [
+            8,
+            8
+          ],
+          "quote": "Run `python scripts/list_branches.py`, pick the branch the user means, then run `python scripts/checkout.py <branch>`."
+        },
+        "confidence": 0.93,
+        "extractor": "llm"
+      },
+      {
+        "id": "i2",
+        "action": "invoke_script",
+        "target": "scripts/checkout.py",
+        "args": [
+          {
+            "slot": "branch",
+            "position": 1,
+            "flag": null,
+            "filled_from": "pick the branch the user means",
+            "input_id": "in1"
+          }
+        ],
+        "input_from": "i1",
+        "evidence": {
+          "file": "SKILL.md",
+          "lines": [
+            8,
+            8
+          ],
+          "quote": "Run `python scripts/list_branches.py`, pick the branch the user means, then run `python scripts/checkout.py <branch>`."
+        },
+        "confidence": 0.9,
+        "extractor": "llm"
+      }
+    ],
+    "rejected_records": [],
+    "binding_errors": []
+  },
+  "nodes": [
+    {
+      "type": "Artifact",
+      "label": "SKILL.md",
+      "key": "artifact:SKILL.md",
+      "kind": "doc",
+      "path": "SKILL.md",
+      "modality": "doc",
+      "id": "n1"
+    },
+    {
+      "type": "Artifact",
+      "label": "scripts/checkout.py",
+      "key": "artifact:scripts/checkout.py",
+      "kind": "code",
+      "path": "scripts/checkout.py",
+      "lang": "python",
+      "modality": "code",
+      "id": "n2"
+    },
+    {
+      "type": "Artifact",
+      "label": "scripts/list_branches.py",
+      "key": "artifact:scripts/list_branches.py",
+      "kind": "code",
+      "path": "scripts/list_branches.py",
+      "lang": "python",
+      "modality": "code",
+      "id": "n3"
+    },
+    {
+      "type": "AgentContext",
+      "label": "Agent context",
+      "key": "ctx",
+      "future_sessions": false,
+      "holds_untrusted": true,
+      "holds_secret": false,
+      "label_sources": [
+        "n7"
+      ],
+      "id": "n4"
+    },
+    {
+      "type": "Operator",
+      "label": "checkout.py argv[1]",
+      "key": "code:scripts/checkout.py:in1",
+      "role": "neutral",
+      "port": "argv[1]",
+      "position": 1,
+      "script": "scripts/checkout.py",
+      "modality": "code",
+      "evidence": {
+        "file": "scripts/checkout.py",
+        "lines": [
+          5
+        ],
+        "quote": "branch = sys.argv[1]"
+      },
+      "in": "code",
+      "operator_kind": "script_input",
+      "id": "n5"
+    },
+    {
+      "type": "Operator",
+      "label": "checkout.py: os.system",
+      "key": "code:scripts/checkout.py:op2",
+      "role": "sink",
+      "sink_category": "shell_exec",
+      "modality": "code",
+      "evidence": {
+        "file": "scripts/checkout.py",
+        "lines": [
+          6
+        ],
+        "quote": "os.system(f\"git checkout {branch}\")"
+      },
+      "in": "code",
+      "id": "n6"
+    },
+    {
+      "type": "Source",
+      "label": "subprocess.run output [untrusted]",
+      "key": "code:scripts/list_branches.py:src1",
+      "trust": "untrusted",
+      "found_in": "code",
+      "category": "other_script_output",
+      "modality": "code",
+      "evidence": {
+        "file": "scripts/list_branches.py",
+        "lines": [
+          4
+        ],
+        "quote": "out = subprocess.run([\"git\", \"branch\", \"-r\"], capture_output=True, text=True).stdout"
+      },
+      "id": "n7"
+    },
+    {
+      "type": "Operator",
+      "label": "list_branches.py: print()",
+      "key": "code:scripts/list_branches.py:op2",
+      "role": "sink",
+      "sink_category": "context_output",
+      "modality": "code",
+      "evidence": {
+        "file": "scripts/list_branches.py",
+        "lines": [
+          6
+        ],
+        "quote": "print(line.strip())"
+      },
+      "in": "code",
+      "id": "n8"
+    },
+    {
+      "type": "Operator",
+      "label": "trigger: git-tools (breadth 0.1)",
+      "key": "trigger",
+      "role": "sink",
+      "sink_category": "skill_trigger",
+      "breadth": 0.1,
+      "modality": "doc",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          3,
+          3
+        ],
+        "quote": "Switch git branches. Use when the user asks to check out a branch."
+      },
+      "in": "doc",
+      "id": "n9"
+    }
+  ],
+  "edges": [
+    {
+      "etype": "refers",
+      "source": "n1",
+      "target": "n3",
+      "key": 0,
+      "id": "e1"
+    },
+    {
+      "etype": "refers",
+      "binds": "<branch> -> argv[1]",
+      "source": "n1",
+      "target": "n2",
+      "key": 0,
+      "id": "e2"
+    },
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n9",
+      "key": 0,
+      "id": "e3"
+    },
+    {
+      "etype": "defines",
+      "source": "n2",
+      "target": "n5",
+      "key": 0,
+      "id": "e4"
+    },
+    {
+      "etype": "defines",
+      "source": "n2",
+      "target": "n6",
+      "key": 0,
+      "id": "e5"
+    },
+    {
+      "etype": "defines",
+      "source": "n3",
+      "target": "n7",
+      "key": 0,
+      "id": "e6"
+    },
+    {
+      "etype": "defines",
+      "source": "n3",
+      "target": "n8",
+      "key": 0,
+      "id": "e7"
+    },
+    {
+      "etype": "flow",
+      "certainty": "probabilistic",
+      "via": "llm_binding",
+      "binds": "<branch> -> argv[1]",
+      "filled_from": "pick the branch the user means",
+      "decided_by": "rule",
+      "source": "n4",
+      "target": "n5",
+      "key": 0,
+      "id": "e8"
+    },
+    {
+      "etype": "flow",
+      "certainty": "deterministic",
+      "via": "code",
+      "source": "n5",
+      "target": "n6",
+      "key": 0,
+      "id": "e9"
+    },
+    {
+      "etype": "flow",
+      "certainty": "deterministic",
+      "via": "code",
+      "source": "n7",
+      "target": "n8",
+      "key": 0,
+      "id": "e10"
+    },
+    {
+      "etype": "flow",
+      "certainty": "deterministic",
+      "via": "stdout",
+      "source": "n8",
+      "target": "n4",
+      "key": 0,
+      "id": "e11"
+    }
+  ]
+}

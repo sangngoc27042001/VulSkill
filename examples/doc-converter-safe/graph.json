@@ -1,0 +1,294 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {
+    "skill": "doc-converter-safe",
+    "skill_dir": "/Users/ngocsang/Documents/Research/VulSkill/sample_skills/doc-converter-safe",
+    "description": "Convert Markdown documentation to PDF with pandoc. Use when the user asks to export or convert the docs.",
+    "extractor": "llm",
+    "trigger_breadth": 0.1,
+    "warnings": [],
+    "records": [
+      {
+        "id": "i1",
+        "action": "invoke_script",
+        "target": "scripts/convert.py",
+        "args": [
+          {
+            "slot": "filename",
+            "position": 1,
+            "flag": null,
+            "filled_from": "For each Markdown file in the repository",
+            "input_id": "in1"
+          }
+        ],
+        "input_from": null,
+        "evidence": {
+          "file": "SKILL.md",
+          "lines": [
+            12,
+            12
+          ],
+          "quote": "1. For each Markdown file in the repository, run `python scripts/convert.py <filename>`."
+        },
+        "confidence": 0.88,
+        "extractor": "llm"
+      },
+      {
+        "id": "i2",
+        "action": "report_to_user",
+        "target": "which PDFs were produced",
+        "args": [],
+        "input_from": null,
+        "evidence": {
+          "file": "SKILL.md",
+          "lines": [
+            13,
+            13
+          ],
+          "quote": "2. Tell the user which PDFs were produced."
+        },
+        "confidence": 0.83,
+        "extractor": "llm"
+      }
+    ],
+    "rejected_records": [],
+    "binding_errors": []
+  },
+  "nodes": [
+    {
+      "type": "Artifact",
+      "label": "SKILL.md",
+      "key": "artifact:SKILL.md",
+      "kind": "doc",
+      "path": "SKILL.md",
+      "modality": "doc",
+      "id": "n1"
+    },
+    {
+      "type": "Artifact",
+      "label": "scripts/convert.py",
+      "key": "artifact:scripts/convert.py",
+      "kind": "code",
+      "path": "scripts/convert.py",
+      "lang": "python",
+      "modality": "code",
+      "id": "n2"
+    },
+    {
+      "type": "AgentContext",
+      "label": "Agent context",
+      "key": "ctx",
+      "future_sessions": false,
+      "holds_untrusted": false,
+      "holds_secret": false,
+      "label_sources": [],
+      "id": "n3"
+    },
+    {
+      "type": "Operator",
+      "label": "convert.py argv[1]",
+      "key": "code:scripts/convert.py:in1",
+      "role": "neutral",
+      "port": "argv[1]",
+      "position": 1,
+      "script": "scripts/convert.py",
+      "modality": "code",
+      "evidence": {
+        "file": "scripts/convert.py",
+        "lines": [
+          7
+        ],
+        "quote": "src = sys.argv[1]"
+      },
+      "in": "code",
+      "operator_kind": "script_input",
+      "id": "n4"
+    },
+    {
+      "type": "Operator",
+      "label": "convert.py: subprocess.run list-form (no shell)",
+      "key": "code:scripts/convert.py:op2",
+      "role": "sanitizer",
+      "modality": "code",
+      "evidence": {
+        "file": "scripts/convert.py",
+        "lines": [
+          8
+        ],
+        "quote": "subprocess.run([\"pandoc\", src, \"-o\", \"out.pdf\"], check=True)"
+      },
+      "in": "code",
+      "id": "n5"
+    },
+    {
+      "type": "Operator",
+      "label": "convert.py: print()",
+      "key": "code:scripts/convert.py:op3",
+      "role": "sink",
+      "sink_category": "context_output",
+      "modality": "code",
+      "evidence": {
+        "file": "scripts/convert.py",
+        "lines": [
+          9
+        ],
+        "quote": "print(\"conversion finished\")"
+      },
+      "in": "code",
+      "id": "n6"
+    },
+    {
+      "type": "Source",
+      "label": "workspace_file_name: For each Markdown file in the repository [untrusted]",
+      "key": "docsrc:SKILL.md:12:workspace_file_name:filename",
+      "trust": "untrusted",
+      "found_in": "doc",
+      "category": "workspace_file_name",
+      "decided_by": "rule",
+      "rule": "file-names",
+      "filled_from": "For each Markdown file in the repository",
+      "modality": "doc",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          12,
+          12
+        ],
+        "quote": "1. For each Markdown file in the repository, run `python scripts/convert.py <filename>`."
+      },
+      "id": "n7"
+    },
+    {
+      "type": "Operator",
+      "label": "report to user",
+      "key": "docop:i2",
+      "role": "neutral",
+      "modality": "doc",
+      "action": "report_to_user",
+      "record_id": "i2",
+      "confidence": 0.83,
+      "extractor": "llm",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          13,
+          13
+        ],
+        "quote": "2. Tell the user which PDFs were produced."
+      },
+      "in": "doc",
+      "id": "n8"
+    },
+    {
+      "type": "Operator",
+      "label": "trigger: doc-converter-safe (breadth 0.1)",
+      "key": "trigger",
+      "role": "sink",
+      "sink_category": "skill_trigger",
+      "breadth": 0.1,
+      "modality": "doc",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          3,
+          3
+        ],
+        "quote": "Convert Markdown documentation to PDF with pandoc. Use when the user asks to export or convert the docs."
+      },
+      "in": "doc",
+      "id": "n9"
+    }
+  ],
+  "edges": [
+    {
+      "etype": "refers",
+      "binds": "<filename> -> argv[1]",
+      "source": "n1",
+      "target": "n2",
+      "key": 0,
+      "id": "e1"
+    },
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n7",
+      "key": 0,
+      "id": "e2"
+    },
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n8",
+      "key": 0,
+      "id": "e3"
+    },
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n9",
+      "key": 0,
+      "id": "e4"
+    },
+    {
+      "etype": "defines",
+      "source": "n2",
+      "target": "n4",
+      "key": 0,
+      "id": "e5"
+    },
+    {
+      "etype": "defines",
+      "source": "n2",
+      "target": "n5",
+      "key": 0,
+      "id": "e6"
+    },
+    {
+      "etype": "defines",
+      "source": "n2",
+      "target": "n6",
+      "key": 0,
+      "id": "e7"
+    },
+    {
+      "etype": "flow",
+      "certainty": "probabilistic",
+      "via": "doc_instruction",
+      "source": "n3",
+      "target": "n8",
+      "key": 0,
+      "id": "e8"
+    },
+    {
+      "etype": "flow",
+      "certainty": "deterministic",
+      "via": "code",
+      "source": "n4",
+      "target": "n5",
+      "key": 0,
+      "id": "e9"
+    },
+    {
+      "etype": "flow",
+      "certainty": "deterministic",
+      "via": "stdout",
+      "source": "n6",
+      "target": "n3",
+      "key": 0,
+      "id": "e10"
+    },
+    {
+      "etype": "flow",
+      "certainty": "extracted",
+      "via": "doc_instruction",
+      "binds": "<filename> -> argv[1]",
+      "filled_from": "For each Markdown file in the repository",
+      "decided_by": "rule",
+      "source": "n7",
+      "target": "n4",
+      "key": 0,
+      "id": "e11"
+    }
+  ]
+}

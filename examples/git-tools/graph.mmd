@@ -1,0 +1,30 @@
+flowchart LR
+  n1["SKILL.md"]:::doc
+  n2["scripts/checkout.py"]:::code
+  n3["scripts/list_branches.py"]:::code
+  n4(("Agent context")):::ctx
+  n5{{"checkout.py argv[1]"}}:::neutral
+  n6{{"checkout.py: os.system"}}:::sink
+  n7[/"subprocess.run output [untrusted]"/]:::untrusted
+  n8{{"list_branches.py: print()"}}:::sink
+  n9{{"trigger: git-tools (breadth 0.1)"}}:::sink
+  n1 -.->|"refers"| n3
+  n1 -.->|"refers: #lt;branch#gt; -#gt; argv[1]"| n2
+  n1 -.- n9
+  n2 -.- n5
+  n2 -.- n6
+  n3 -.- n7
+  n3 -.- n8
+  n4 -->|"probabilistic / llm_binding"| n5
+  n5 ==>|"deterministic / code"| n6
+  n7 ==>|"deterministic / code"| n8
+  n8 ==>|"deterministic / stdout"| n4
+  classDef code fill:#dbeafe,stroke:#2563eb,color:#111
+  classDef doc fill:#fef3c7,stroke:#d97706,color:#111
+  classDef untrusted fill:#dc2626,stroke:#7f1d1d,color:#fff
+  classDef secret fill:#f97316,stroke:#9a3412,color:#fff
+  classDef trusted fill:#16a34a,stroke:#14532d,color:#fff
+  classDef sink fill:#7f1d1d,stroke:#450a0a,color:#fff
+  classDef sanitizer fill:#2563eb,stroke:#1e3a8a,color:#fff
+  classDef neutral fill:#6b7280,stroke:#374151,color:#fff
+  classDef ctx fill:#7c3aed,stroke:#4c1d95,color:#fff

@@ -1,0 +1,247 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {
+    "declared_bins": [
+      "curl"
+    ],
+    "skill": "clawnads",
+    "skill_dir": "/Users/ngocsang/Documents/Research/VulSkill/sample_skills/send-money",
+    "description": "Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents",
+    "extractor": "llm",
+    "trigger_breadth": 0.3,
+    "warnings": [
+      "SKILL.md has no YAML frontmatter fences; recovered fields from an inline header: description, metadata, name"
+    ],
+    "records": [
+      {
+        "id": "i1",
+        "action": "receive_messages",
+        "target": "Other agents (DMs)",
+        "args": [],
+        "input_from": null,
+        "evidence": {
+          "file": "SKILL.md",
+          "lines": [
+            1,
+            1
+          ],
+          "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+        },
+        "confidence": 0.78,
+        "extractor": "llm"
+      },
+      {
+        "id": "i2",
+        "action": "call_api",
+        "target": "POST /agents/NAME/wallet/send",
+        "args": [],
+        "input_from": null,
+        "evidence": {
+          "file": "SKILL.md",
+          "lines": [
+            1,
+            1
+          ],
+          "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+        },
+        "confidence": 0.74,
+        "extractor": "llm"
+      }
+    ],
+    "rejected_records": [],
+    "binding_errors": []
+  },
+  "nodes": [
+    {
+      "type": "Artifact",
+      "label": "SKILL.md",
+      "key": "artifact:SKILL.md",
+      "kind": "doc",
+      "path": "SKILL.md",
+      "modality": "doc",
+      "id": "n1"
+    },
+    {
+      "type": "AgentContext",
+      "label": "Agent context",
+      "key": "ctx",
+      "future_sessions": false,
+      "holds_untrusted": true,
+      "holds_secret": false,
+      "label_sources": [
+        "n4"
+      ],
+      "id": "n2"
+    },
+    {
+      "type": "Operator",
+      "label": "receive: Other agents (DMs)",
+      "key": "docop:i1",
+      "role": "neutral",
+      "modality": "doc",
+      "action": "receive_messages",
+      "record_id": "i1",
+      "confidence": 0.78,
+      "extractor": "llm",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          1,
+          1
+        ],
+        "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+      },
+      "in": "doc",
+      "id": "n3"
+    },
+    {
+      "type": "Source",
+      "label": "external_text: Other agents (DMs) [untrusted]",
+      "key": "docsrc:SKILL.md:1:external_text:Other agents (DMs)",
+      "trust": "untrusted",
+      "found_in": "doc",
+      "category": "external_text",
+      "decided_by": "rule",
+      "rule": "receive_messages",
+      "filled_from": "Other agents (DMs)",
+      "modality": "doc",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          1,
+          1
+        ],
+        "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+      },
+      "id": "n4"
+    },
+    {
+      "type": "Operator",
+      "label": "api: POST /agents/NAME/wallet/send",
+      "key": "docop:i2",
+      "role": "sink",
+      "sink_category": "value_transfer",
+      "modality": "doc",
+      "action": "call_api",
+      "record_id": "i2",
+      "confidence": 0.74,
+      "extractor": "llm",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          1,
+          1
+        ],
+        "quote": "name: clawnads description: Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents. . . . metadata: { \"openclaw\": { \"emoji\": \" \", \"requires\": { \"env\": [\"CLAW_AUTH_TOKEN\"], \"bins\": [\"curl\"] } } }  # Clawnads ... You are part of a multi-agent network. Other agents DM you with proposals, questions, and funding requests. Read, evaluate, and respond to every message. ...  ## Wallet & Transactions ... POST /agents/NAME/wallet/send ... Withdrawal protection: Sends to external (non-agent) wallets require operator approval.  Agent-to-agent transfers execute instantly. ..."
+      },
+      "in": "doc",
+      "target": "POST /agents/NAME/wallet/send",
+      "id": "n5"
+    },
+    {
+      "type": "Source",
+      "label": "env CLAW_AUTH_TOKEN [secret]",
+      "key": "envsecret:CLAW_AUTH_TOKEN",
+      "trust": "secret",
+      "found_in": "environment",
+      "category": "env_secret",
+      "decided_by": "rule",
+      "rule": "declared_env",
+      "env_var": "CLAW_AUTH_TOKEN",
+      "modality": "doc",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          1,
+          1
+        ],
+        "quote": "CLAW_AUTH_TOKEN"
+      },
+      "id": "n6"
+    },
+    {
+      "type": "Operator",
+      "label": "trigger: clawnads (breadth 0.3)",
+      "key": "trigger",
+      "role": "sink",
+      "sink_category": "skill_trigger",
+      "breadth": 0.3,
+      "modality": "doc",
+      "evidence": {
+        "file": "SKILL.md",
+        "lines": [
+          1,
+          1
+        ],
+        "quote": "Register with Clawnads to get a Privy wallet on Monad, trade tokens, and collaborate with other agents"
+      },
+      "in": "doc",
+      "id": "n7"
+    }
+  ],
+  "edges": [
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n3",
+      "key": 0,
+      "id": "e1"
+    },
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n4",
+      "key": 0,
+      "id": "e2"
+    },
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n5",
+      "key": 0,
+      "id": "e3"
+    },
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n6",
+      "key": 0,
+      "id": "e4"
+    },
+    {
+      "etype": "defines",
+      "source": "n1",
+      "target": "n7",
+      "key": 0,
+      "id": "e5"
+    },
+    {
+      "etype": "flow",
+      "certainty": "probabilistic",
+      "via": "doc_instruction",
+      "source": "n2",
+      "target": "n5",
+      "key": 0,
+      "id": "e6"
+    },
+    {
+      "etype": "flow",
+      "certainty": "extracted",
+      "via": "doc_instruction",
+      "source": "n3",
+      "target": "n2",
+      "key": 0,
+      "id": "e7"
+    },
+    {
+      "etype": "flow",
+      "certainty": "extracted",
+      "via": "doc_instruction",
+      "source": "n4",
+      "target": "n3",
+      "key": 0,
+      "id": "e8"
+    }
+  ]
+}
