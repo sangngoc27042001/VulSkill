@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 540" width="820" height="540" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <rect width="820" height="540" fill="#ffffff"/>
+
+  <!-- edges -->
+  <g stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arr)">
+    <!-- Artifact self-loop: REFERS -->
+    <path d="M100,157 C68,88 172,88 140,157"/>
+    <!-- Artifact -> Source: DEFINES -->
+    <line x1="176.3" y1="189" x2="323.7" y2="121"/>
+    <!-- Artifact -> Operator: DEFINES -->
+    <line x1="176.3" y1="241" x2="323.7" y2="309"/>
+    <!-- Source -> Operator: FLOW -->
+    <line x1="380" y1="157" x2="380" y2="273"/>
+    <!-- Source -> AgentContext: FLOW -->
+    <line x1="437.5" y1="118" x2="622.5" y2="192"/>
+    <!-- Operator -> AgentContext: FLOW (stdout, persists) -->
+    <line x1="433" y1="300.9" x2="618" y2="226.9"/>
+    <!-- Operator self-loop: FLOW (code) -->
+    <path d="M360,393 C322,462 438,462 400,393"/>
+  </g>
+  <!-- AgentContext -> Operator: probabilistic FLOW (dashed) -->
+  <line x1="627" y1="249.1" x2="442" y2="323.1" stroke="#333" stroke-width="1.6" stroke-dasharray="6,4" fill="none" marker-end="url(#arr)"/>
+
+  <!-- edge labels -->
+  <g font-size="11" fill="#333" letter-spacing="0.5">
+    <text x="120" y="80" text-anchor="middle">REFERS</text>
+    <text x="120" y="94" text-anchor="middle" font-size="9.5" fill="#666">binds &lt;x&gt; → argv[i]</text>
+
+    <text transform="translate(246,148) rotate(-24.8)" text-anchor="middle">DEFINES</text>
+    <text transform="translate(256,262) rotate(24.8)" text-anchor="middle">DEFINES</text>
+
+    <text x="390" y="212">FLOW</text>
+    <text x="390" y="225" font-size="9.5" fill="#666">code, doc instruction</text>
+
+    <text transform="translate(538,134) rotate(21.8)" text-anchor="middle">FLOW</text>
+    <text transform="translate(533,147) rotate(21.8)" text-anchor="middle" font-size="9.5" fill="#666">fetch, read</text>
+
+    <text transform="translate(516,242) rotate(-21.8)" text-anchor="middle">FLOW</text>
+    <text transform="translate(522,255) rotate(-21.8)" text-anchor="middle" font-size="9.5" fill="#666">stdout, persists</text>
+
+    <text transform="translate(548,306) rotate(-21.8)" text-anchor="middle">FLOW</text>
+    <text transform="translate(553,319) rotate(-21.8)" text-anchor="middle" font-size="9.5" fill="#666">llm_binding, follow_content,</text>
+    <text transform="translate(558,331) rotate(-21.8)" text-anchor="middle" font-size="9.5" fill="#666">trigger, default_outflow</text>
+
+    <text x="380" y="472" text-anchor="middle">FLOW</text>
+    <text x="380" y="485" text-anchor="middle" font-size="9.5" fill="#666">code</text>
+  </g>
+
+  <!-- nodes -->
+  <g stroke="#333" stroke-width="1.6" fill="#f2f2f2">
+    <circle cx="120" cy="215" r="62"/>
+    <circle cx="380" cy="95" r="62"/>
+    <circle cx="380" cy="335" r="62"/>
+    <circle cx="680" cy="215" r="62"/>
+  </g>
+  <g text-anchor="middle" fill="#222">
+    <text x="120" y="214" font-size="16">Artifact</text>
+    <text x="120" y="232" font-size="10" fill="#666">doc | code</text>
+
+    <text x="380" y="94" font-size="16">Source</text>
+    <text x="380" y="110" font-size="9.5" fill="#666">untrusted | trusted</text>
+    <text x="380" y="122" font-size="9.5" fill="#666">| secret</text>
+
+    <text x="380" y="334" font-size="16">Operator</text>
+    <text x="380" y="350" font-size="9.5" fill="#666">sink | sanitizer</text>
+    <text x="380" y="362" font-size="9.5" fill="#666">| neutral</text>
+
+    <text x="680" y="211" font-size="16">Agent</text>
+    <text x="680" y="230" font-size="16">Context</text>
+  </g>
+
+  <!-- legend -->
+  <g font-size="11" fill="#333">
+    <line x1="230" y1="515" x2="275" y2="515" stroke="#333" stroke-width="1.6" marker-end="url(#arr)"/>
+    <text x="283" y="519">deterministic / extracted</text>
+    <line x1="460" y1="515" x2="505" y2="515" stroke="#333" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arr)"/>
+    <text x="513" y="519">probabilistic (agent decision)</text>
+  </g>
+</svg>

@@ -1,0 +1,31 @@
+[project]
+name = "skill2graph"
+version = "0.1.0"
+description = "Build Skill Flow Graphs (taint-style data-flow graphs) from LLM agent skill folders"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "networkx>=3.6.1",
+    "openai>=3.46.0",
+    "pydantic>=2.14.3",
+    "python-dotenv>=1.2.4",
+    "pyyaml>=6.0.3",
+]
+
+[project.optional-dependencies]
+llm = []
+
+[project.scripts]
+skill2graph = "skill2graph.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

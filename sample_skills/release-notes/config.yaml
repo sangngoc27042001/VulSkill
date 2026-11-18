@@ -1,0 +1,2 @@
+# Command template used by render.py
+render_cmd: "echo '- {title}' >> {out}"
